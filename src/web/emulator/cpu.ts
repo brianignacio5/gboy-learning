@@ -3274,7 +3274,388 @@ export class CPU {
     this.clocks.t = 4;
   }
 
+  /**
+   * OR A, B (0xB0)
+   * Performs a bitwise OR operation between register A and register B.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Reset.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private orA_B() {
+    const b = this.registers.b;
+    const result = this.registers.a | b;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", false);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
 
+  /**
+   * OR A, C (0xB1)
+   * Performs a bitwise OR operation between register A and register C.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Reset.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private orA_C() {
+    const c = this.registers.c;
+    const result = this.registers.a | c;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", false);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * OR A, D (0xB2)
+   * Performs a bitwise OR operation between register A and register D.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Reset.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private orA_D() {
+    const d = this.registers.d;
+    const result = this.registers.a | d;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", false);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * OR A, E (0xB3)
+   * Performs a bitwise OR operation between register A and register E.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Reset.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private orA_E() {
+    const e = this.registers.e;
+    const result = this.registers.a | e;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", false);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * OR A, H (0xB4)
+   * Performs a bitwise OR operation between register A and register H.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Reset.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private orA_H() {
+    const h = this.registers.h;
+    const result = this.registers.a | h;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", false);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * OR A, L (0xB5)
+   * Performs a bitwise OR operation between register A and register L.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Reset.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private orA_L() {
+    const l = this.registers.l;
+    const result = this.registers.a | l;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", false);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * OR A, (HL) (0xB6)
+   * Performs a bitwise OR operation between register A and the value at address (HL).
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Reset.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 8
+   */
+  private orA_HL() {
+    const value = this.memory.readByte(this.registers.hl);
+    const result = this.registers.a | value;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", false);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 2;
+    this.clocks.t = 8;
+  }
+
+  /**
+   * OR A, A (0xB7)
+   * Performs a bitwise OR operation between register A and itself (result is always A).
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Reset.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private orA_A() {
+    const result = this.registers.a | this.registers.a;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", false);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * CP A, B (0xB8)
+   * Compares the value in register A with the value in register B.
+   * Sets flags based on the result of the comparison.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if A == B.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if there is a carry from bit 3.
+   * - C (Carry): Set if A < B.
+   *
+   * Clock cycles: 4
+   */
+  private cpA_B() {
+    const b = this.registers.b;
+    const result = this.registers.a - b;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (this.registers.a & 0xf) < (b & 0xf));
+    this.setFlag("C", this.registers.a < b);
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * CP A, C (0xB9)
+   * Compares the value in register A with the value in register C.
+   * Sets flags based on the result of the comparison.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if A == C.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if there is a carry from bit 3.
+   * - C (Carry): Set if A < C.
+   *
+   * Clock cycles: 4
+   */
+  private cpA_C() {
+    const c = this.registers.c;
+    const result = this.registers.a - c;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (this.registers.a & 0xf) < (c & 0xf));
+    this.setFlag("C", this.registers.a < c);
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * CP A, D (0xBA)
+   * Compares the value in register A with the value in register D.
+   * Sets flags based on the result of the comparison.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if A == D.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if there is a carry from bit 3.
+   * - C (Carry): Set if A < D.
+   *
+   * Clock cycles: 4
+   */
+  private cpA_D() {
+    const d = this.registers.d;
+    const result = this.registers.a - d;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (this.registers.a & 0xf) < (d & 0xf));
+    this.setFlag("C", this.registers.a < d);
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * CP A, E (0xBB)
+   * Compares the value in register A with the value in register E.
+   * Sets flags based on the result of the comparison.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if A == E.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if there is a carry from bit 3.
+   * - C (Carry): Set if A < E.
+   *
+   * Clock cycles: 4
+   */
+  private cpA_E() {
+    const e = this.registers.e;
+    const result = this.registers.a - e;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (this.registers.a & 0xf) < (e & 0xf));
+    this.setFlag("C", this.registers.a < e);
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+
+  /**
+   * CP A, H (0xBC)
+   * Compares the value in register A with the value in register H.
+   * Sets flags based on the result of the comparison.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if A == H.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if there is a carry from bit 3.
+   * - C (Carry): Set if A < H.
+   *
+   * Clock cycles: 4
+   */
+  private cpA_H() {
+    const h = this.registers.h;
+    const result = this.registers.a - h;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (this.registers.a & 0xf) < (h & 0xf));
+    this.setFlag("C", this.registers.a < h);
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * CP A, L (0xBD)
+   * Compares the value in register A with the value in register L.
+   * Sets flags based on the result of the comparison.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if A == L.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if there is a carry from bit 3.
+   * - C (Carry): Set if A < L.
+   *
+   * Clock cycles: 4
+   */
+  private cpA_L() {
+    const l = this.registers.l;
+    const result = this.registers.a - l;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (this.registers.a & 0xf) < (l & 0xf));
+    this.setFlag("C", this.registers.a < l);
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * CP A, (HL) (0xBE)
+   * Compares the value in register A with the value at address (HL).
+   * Sets flags based on the result of the comparison.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if A == (HL).
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if there is a carry from bit 3.
+   * - C (Carry): Set if A < (HL).
+   *
+   * Clock cycles: 8
+   */
+  private cpA_HL() {
+    const value = this.memory.readByte(this.registers.hl);
+    const result = this.registers.a - value;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (this.registers.a & 0xf) < (value & 0xf));
+    this.setFlag("C", this.registers.a < value);
+    this.clocks.m = 2;
+    this.clocks.t = 8;
+    this.registers.pc = (this.registers.pc + 1) & 0xffff; // Increment PC to next instruction
+  }
+
+  /**
+   * CP A, A (0xBF)
+   * Compares the value in register A with itself.
+   * Sets flags based on the result of the comparison.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if A == A (always true).
+   * - N (Subtract): Set.
+   * - H (Half Carry): Reset.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private cpA_A() {
+    this.setFlag("Z", true); // A == A
+    this.setFlag("N", true);
+    this.setFlag("H", false);
+    this.setFlag("C", false);
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
 
   /**
    * Add BC to HL
