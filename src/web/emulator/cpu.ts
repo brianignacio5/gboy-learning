@@ -296,6 +296,109 @@ export class CPU {
     instructions[0x9e] = this.sbcA_HL;
     instructions[0x9f] = this.sbcA_A;
 
+    instructions[0xa0] = this.andA_B;
+    instructions[0xa1] = this.andA_C;
+    instructions[0xa2] = this.andA_D;
+    instructions[0xa3] = this.andA_E;
+    instructions[0xa4] = this.andA_H;
+    instructions[0xa5] = this.andA_L;
+    instructions[0xa6] = this.andA_HL;
+    instructions[0xa7] = this.andA_A;
+    instructions[0xa8] = this.xorA_B;
+    instructions[0xa9] = this.xorA_C;
+    instructions[0xaa] = this.xorA_D;
+    instructions[0xab] = this.xorA_E;
+    instructions[0xac] = this.xorA_H;
+    instructions[0xad] = this.xorA_L;
+    instructions[0xae] = this.xorA_HL;
+    instructions[0xaf] = this.xorA_A;
+
+    instructions[0xb0] = this.orA_B;
+    instructions[0xb1] = this.orA_C;
+    instructions[0xb2] = this.orA_D;
+    instructions[0xb3] = this.orA_E;
+    instructions[0xb4] = this.orA_H;
+    instructions[0xb5] = this.orA_L;
+    instructions[0xb6] = this.orA_HL;
+    instructions[0xb7] = this.orA_A;
+    instructions[0xb8] = this.cpA_B;
+    instructions[0xb9] = this.cpA_C;
+    instructions[0xba] = this.cpA_D;
+    instructions[0xbb] = this.cpA_E;
+    instructions[0xbc] = this.cpA_H;
+    instructions[0xbd] = this.cpA_L;
+    instructions[0xbe] = this.cpA_HL;
+    instructions[0xbf] = this.cpA_A;
+
+    instructions[0xc0] = this.retNZ;
+    instructions[0xc1] = this.popBC;
+    instructions[0xc2] = this.jpnz_a16;
+    instructions[0xc3] = this.jp_a16;
+    instructions[0xc4] = this.callNZ_a16;
+    instructions[0xc5] = this.pushBC;
+    instructions[0xc6] = this.addA_d8;
+    instructions[0xc7] = this.rst00;
+    instructions[0xc8] = this.retZ;
+    instructions[0xc9] = this.ret;
+    instructions[0xca] = this.jpz_a16;
+    instructions[0xcb] = this.prefixCB;
+    instructions[0xcc] = this.callZ_a16;
+    instructions[0xcd] = this.pushAF;
+    instructions[0xce] = this.adcA_d8;
+    instructions[0xcf] = this.rst08;
+
+    instructions[0xd0] = this.retNC;
+    instructions[0xd1] = this.popDE;
+    instructions[0xd2] = this.jpnC_a16;
+    instructions[0xd3] = this.outC_a8;
+    instructions[0xd4] = this.callNC_a16;
+    instructions[0xd5] = this.pushDE;
+    instructions[0xd6] = this.subA_d8;
+    instructions[0xd7] = this.rst10;
+    instructions[0xd8] = this.retC;
+    instructions[0xd9] = this.reti;
+    instructions[0xda] = this.jpC_a16;
+    instructions[0xdb] = this.inC_a8;
+    instructions[0xdc] = this.callC_a16;
+    instructions[0xdd] = this.prefixDD;
+    instructions[0xde] = this.sbcA_d8;
+    instructions[0xdf] = this.rst18;
+
+    instructions[0xe0] = this.ldH_a8;
+    instructions[0xe1] = this.popHL;
+    instructions[0xe2] = this.ldC_A;
+    instructions[0xe3] = this.ldHLI_SP;
+    instructions[0xe4] = this.prefixE4; // Unused
+    instructions[0xe5] = this.pushHL;
+    instructions[0xe6] = this.andA_d8;
+    instructions[0xe7] = this.rst20;
+    instructions[0xe8] = this.addSP_r8;
+    instructions[0xe9] = this.jpHL;
+    instructions[0xea] = this.ld_a16_A;
+    instructions[0xeb] = this.ld_A_a16;
+    instructions[0xec] = this.prefixEC; // Unused
+
+    instructions[0xed] = this.prefixED; // Unused
+    instructions[0xee] = this.xorA_d8;
+    instructions[0xef] = this.rst28;
+
+    instructions[0xf0] = this.ldA_a8;
+    instructions[0xf1] = this.popAF;
+    instructions[0xf2] = this.ldA_C;
+    instructions[0xf3] = this.di;
+    instructions[0xf4] = this.callZ_a16;
+    instructions[0xf5] = this.pushAF;
+    instructions[0xf6] = this.orA_d8;
+    instructions[0xf7] = this.rst30;
+    instructions[0xf8] = this.ldHL_SP_r8;
+    instructions[0xf9] = this.ldSP_HL;
+    instructions[0xfa] = this.ldA_d16;
+    instructions[0xfb] = this.ei;
+    instructions[0xfc] = this.call_a16;
+    instructions[0xfd] = this.prefixFD;
+    instructions[0xfe] = this.cpA_d8;
+    instructions[0xff] = this.rst38;
+
     return instructions;
   }
 
@@ -1976,6 +2079,1202 @@ export class CPU {
     this.clocks.m = 1;
     this.clocks.t = 4;
   }
+
+  /**
+   * ADD A, B (0x80)
+   * Adds the value of register B to register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set if carry from bit 3.
+   * - C (Carry): Set if carry from bit 7.
+   *
+   * Clock cycles: 4
+   */
+  private addA_B() {
+    const a = this.registers.a;
+    const b = this.registers.b;
+    const result = (a + b) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", (a & 0xf) + (b & 0xf) > 0xf);
+    this.setFlag("C", a + b > 0xff);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * ADD A, C (0x81)
+   * Adds the value of register C to register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set if carry from bit 3.
+   * - C (Carry): Set if carry from bit 7.
+   *
+   * Clock cycles: 4
+   */
+  private addA_C() {
+    const a = this.registers.a;
+    const c = this.registers.c;
+    const result = (a + c) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", (a & 0xf) + (c & 0xf) > 0xf);
+    this.setFlag("C", a + c > 0xff);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * ADD A, D (0x82)
+   * Adds the value of register D to register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set if carry from bit 3.
+   * - C (Carry): Set if carry from bit 7.
+   *
+   * Clock cycles: 4
+   */
+  private addA_D() {
+    const a = this.registers.a;
+    const d = this.registers.d;
+    const result = (a + d) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", (a & 0xf) + (d & 0xf) > 0xf);
+    this.setFlag("C", a + d > 0xff);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * ADD A, E (0x83)
+   * Adds the value of register E to register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set if carry from bit 3.
+   * - C (Carry): Set if carry from bit 7.
+   *
+   * Clock cycles: 4
+   */
+  private addA_E() {
+    const a = this.registers.a;
+    const e = this.registers.e;
+    const result = (a + e) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", (a & 0xf) + (e & 0xf) > 0xf);
+    this.setFlag("C", a + e > 0xff);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * ADC A, B (0x88)
+   * Adds the value of register B and the carry flag to register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set if carry from bit 3.
+   * - C (Carry): Set if carry from bit 7.
+   *
+   * Clock cycles: 4
+   */
+  private adcA_B() {
+    const a = this.registers.a;
+    const b = this.registers.b;
+    const carry = this.registers.f & 0x10 ? 1 : 0;
+    const result = (a + b + carry) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", (a & 0xf) + (b & 0xf) + carry > 0xf);
+    this.setFlag("C", a + b + carry > 0xff);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * ADC A, C (0x89)
+   * Adds the value of register C and the carry flag to register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set if carry from bit 3.
+   * - C (Carry): Set if carry from bit 7.
+   *
+   * Clock cycles: 4
+   */
+  private adcA_C() {
+    const a = this.registers.a;
+    const c = this.registers.c;
+    const carry = this.registers.f & 0x10 ? 1 : 0;
+    const result = (a + c + carry) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", (a & 0xf) + (c & 0xf) + carry > 0xf);
+    this.setFlag("C", a + c + carry > 0xff);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * ADC A, H (0x8C)
+   * Adds the value of register H and the carry flag to register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set if carry from bit 3.
+   * - C (Carry): Set if carry from bit 7.
+   *
+   * Clock cycles: 4
+   */
+  private adcA_H() {
+    const a = this.registers.a;
+    const h = this.registers.h;
+    const carry = this.registers.f & 0x10 ? 1 : 0;
+    const result = (a + h + carry) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", (a & 0xf) + (h & 0xf) + carry > 0xf);
+    this.setFlag("C", a + h + carry > 0xff);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * SUB A, B (0x90)
+   * Subtracts the value of register B from register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if borrow from bit 4.
+   * - C (Carry): Set if borrow (A < B).
+   *
+   * Clock cycles: 4
+   */
+  private subA_B() {
+    const a = this.registers.a;
+    const b = this.registers.b;
+    const result = (a - b) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (a & 0xf) < (b & 0xf));
+    this.setFlag("C", a < b);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * SUB A, C (0x91)
+   * Subtracts the value of register C from register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if borrow from bit 4.
+   * - C (Carry): Set if borrow (A < C).
+   *
+   * Clock cycles: 4
+   */
+  private subA_C() {
+    const a = this.registers.a;
+    const c = this.registers.c;
+    const result = (a - c) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (a & 0xf) < (c & 0xf));
+    this.setFlag("C", a < c);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * SUB A, D (0x92)
+   * Subtracts the value of register D from register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if borrow from bit 4.
+   * - C (Carry): Set if borrow (A < D).
+   *
+   * Clock cycles: 4
+   */
+  private subA_D() {
+    const a = this.registers.a;
+    const d = this.registers.d;
+    const result = (a - d) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (a & 0xf) < (d & 0xf));
+    this.setFlag("C", a < d);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * SUB A, E (0x93)
+   * Subtracts the value of register E from register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if borrow from bit 4.
+   * - C (Carry): Set if borrow (A < E).
+   *
+   * Clock cycles: 4
+   */
+  private subA_E() {
+    const a = this.registers.a;
+    const e = this.registers.e;
+    const result = (a - e) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (a & 0xf) < (e & 0xf));
+    this.setFlag("C", a < e);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * SUB A, H (0x94)
+   * Subtracts the value of register H from register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if borrow from bit 4.
+   * - C (Carry): Set if borrow (A < H).
+   *
+   * Clock cycles: 4
+   */
+  private subA_H() {
+    const a = this.registers.a;
+    const h = this.registers.h;
+    const result = (a - h) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (a & 0xf) < (h & 0xf));
+    this.setFlag("C", a < h);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * SUB A, L (0x94)
+   * Subtracts the value of register L from register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if borrow from bit 4.
+   * - C (Carry): Set if borrow (A < L).
+   *
+   * Clock cycles: 4
+   */
+  private subA_L() {
+    const a = this.registers.a;
+    const l = this.registers.l;
+    const result = (a - l) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (a & 0xf) < (l & 0xf));
+    this.setFlag("C", a < l);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * SUB A, (HL) (0x96)
+   * Subtracts the value at address (HL) from register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if borrow from bit 4.
+   * - C (Carry): Set if borrow (A < value at HL).
+   *
+   * Clock cycles: 8
+   */
+  private subA_HL() {
+    const value = this.memory.readByte(this.registers.hl);
+    const a = this.registers.a;
+    const result = (a - value) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (a & 0xf) < (value & 0xf));
+    this.setFlag("C", a < value);
+    this.registers.a = result;
+    this.clocks.m = 2;
+    this.clocks.t = 8;
+  }
+
+  /**
+   * SUB A, A (0x97)
+   * Subtracts the value of register A from itself (result is always 0).
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if borrow from bit 4.
+   * - C (Carry): Set if borrow (A < A, which is never true).
+   *
+   * Clock cycles: 4
+   */
+  private subA_A() {
+    const a = this.registers.a;
+    const result = (a - a) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (a & 0xf) < (a & 0xf));
+    this.setFlag("C", a < a);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * SBC A, B (0x98)
+   * Subtracts the value of register B and the carry flag from register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if borrow from bit 4.
+   * - C (Carry): Set if borrow (A < B + carry).
+   *
+   * Clock cycles: 4
+   */
+  private sbcA_B() {
+    const a = this.registers.a;
+    const b = this.registers.b;
+    const carry = this.registers.f & 0x10 ? 1 : 0;
+    const result = (a - b - carry) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (a & 0xf) < (b & 0xf) + carry);
+    this.setFlag("C", a < b + carry);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * SBC A, C (0x99)
+   * Subtracts the value of register C and the carry flag from register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if borrow from bit 4.
+   * - C (Carry): Set if borrow (A < C + carry).
+   *
+   * Clock cycles: 4
+   */
+  private sbcA_C() {
+    const a = this.registers.a;
+    const c = this.registers.c;
+    const carry = this.registers.f & 0x10 ? 1 : 0;
+    const result = (a - c - carry) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (a & 0xf) < (c & 0xf) + carry);
+    this.setFlag("C", a < c + carry);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * SBC A, D (0x9A)
+   * Subtracts the value of register D and the carry flag from register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if borrow from bit 4.
+   * - C (Carry): Set if borrow (A < D + carry).
+   *
+   * Clock cycles: 4
+   */
+  private sbcA_D() {
+    const a = this.registers.a;
+    const d = this.registers.d;
+    const carry = this.registers.f & 0x10 ? 1 : 0;
+    const result = (a - d - carry) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (a & 0xf) < (d & 0xf) + carry);
+    this.setFlag("C", a < d + carry);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * SBC A, E (0x9B)
+   * Subtracts the value of register E and the carry flag from register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if borrow from bit 4.
+   * - C (Carry): Set if borrow (A < E + carry).
+   *
+   * Clock cycles: 4
+   */
+  private sbcA_E() {
+    const a = this.registers.a;
+    const e = this.registers.e;
+    const carry = this.registers.f & 0x10 ? 1 : 0;
+    const result = (a - e - carry) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (a & 0xf) < (e & 0xf) + carry);
+    this.setFlag("C", a < e + carry);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * SBC A, H (0x9C)
+   * Subtracts the value of register H and the carry flag from register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if borrow from bit 4.
+   * - C (Carry): Set if borrow (A < H + carry).
+   *
+   * Clock cycles: 4
+   */
+  private sbcA_H() {
+    const a = this.registers.a;
+    const h = this.registers.h;
+    const carry = this.registers.f & 0x10 ? 1 : 0;
+    const result = (a - h - carry) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (a & 0xf) < (h & 0xf) + carry);
+    this.setFlag("C", a < h + carry);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * SBC A, L (0x9D)
+   * Subtracts the value of register L and the carry flag from register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if borrow from bit 4.
+   * - C (Carry): Set if borrow (A < L + carry).
+   *
+   * Clock cycles: 4
+   */
+  private sbcA_L() {
+    const a = this.registers.a;
+    const l = this.registers.l;
+    const carry = this.registers.f & 0x10 ? 1 : 0;
+    const result = (a - l - carry) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (a & 0xf) < (l & 0xf) + carry);
+    this.setFlag("C", a < l + carry);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * SBC A, (HL) (0x9E)
+   * Subtracts the value at address (HL) and the carry flag from register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if borrow from bit 4.
+   * - C (Carry): Set if borrow (A < value at HL + carry).
+   *
+   * Clock cycles: 8
+   */
+  private sbcA_HL() {
+    const value = this.memory.readByte(this.registers.hl);
+    const a = this.registers.a;
+    const carry = this.registers.f & 0x10 ? 1 : 0;
+    const result = (a - value - carry) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (a & 0xf) < (value & 0xf) + carry);
+    this.setFlag("C", a < value + carry);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 8;
+  }
+
+  /**
+   * SBC A, A (0x9F)
+   * Subtracts the value of register A from itself (result is always 0).
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Set.
+   * - H (Half Carry): Set if borrow from bit 4.
+   * - C (Carry): Set if borrow (A < A, which is never true).
+   *
+   * Clock cycles: 4
+   */
+  private sbcA_A() {
+    const a = this.registers.a;
+    const carry = this.registers.f & 0x10 ? 1 : 0;
+    const result = (a - a - carry) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", true);
+    this.setFlag("H", (a & 0xf) < (a & 0xf) + carry);
+    this.setFlag("C", a < a + carry);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * ADC A, L (0x8D)
+   * Adds the value of register L and the carry flag to register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set if carry from bit 3.
+   * - C (Carry): Set if carry from bit 7.
+   *
+   * Clock cycles: 4
+   */
+  private adcA_L() {
+    const a = this.registers.a;
+    const l = this.registers.l;
+    const carry = this.registers.f & 0x10 ? 1 : 0;
+    const result = (a + l + carry) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", (a & 0xf) + (l & 0xf) + carry > 0xf);
+    this.setFlag("C", a + l + carry > 0xff);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * ADC A, (HL) (0x8E)
+   * Adds the value at address (HL) and the carry flag to register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set if carry from bit 3.
+   * - C (Carry): Set if carry from bit 7.
+   *
+   * Clock cycles: 8
+   */
+  private adcA_HL() {
+    const value = this.memory.readByte(this.registers.hl);
+    const a = this.registers.a;
+    const carry = this.registers.f & 0x10 ? 1 : 0;
+    const result = (a + value + carry) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", (a & 0xf) + (value & 0xf) + carry > 0xf);
+    this.setFlag("C", a + value + carry > 0xff);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * ADC A, A (0x8F)
+   * Adds the value of register A and the carry flag to register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set if carry from bit 3.
+   * - C (Carry): Set if carry from bit 7.
+   *
+   * Clock cycles: 4
+   */
+  private adcA_A() {
+    const a = this.registers.a;
+    const carry = this.registers.f & 0x10 ? 1 : 0;
+    const result = (a + a + carry) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", (a & 0xf) + (a & 0xf) + carry > 0xf);
+    this.setFlag("C", a + a + carry > 0xff);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * ADC A, D (0x8A)
+   * Adds the value of register D and the carry flag to register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set if carry from bit 3.
+   * - C (Carry): Set if carry from bit 7.
+   *
+   * Clock cycles: 4
+   */
+  private adcA_D() {
+    const a = this.registers.a;
+    const d = this.registers.d;
+    const carry = this.registers.f & 0x10 ? 1 : 0;
+    const result = (a + d + carry) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", (a & 0xf) + (d & 0xf) + carry > 0xf);
+    this.setFlag("C", a + d + carry > 0xff);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * ADC A, E (0x8B)
+   * Adds the value of register E and the carry flag to register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set if carry from bit 3.
+   * - C (Carry): Set if carry from bit 7.
+   *
+   * Clock cycles: 4
+   */
+  private adcA_E() {
+    const a = this.registers.a;
+    const e = this.registers.e;
+    const carry = this.registers.f & 0x10 ? 1 : 0;
+    const result = (a + e + carry) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", (a & 0xf) + (e & 0xf) + carry > 0xf);
+    this.setFlag("C", a + e + carry > 0xff);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * ADD A, H (0x84)
+   * Adds the value of register H to register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set if carry from bit 3.
+   * - C (Carry): Set if carry from bit 7.
+   *
+   * Clock cycles: 4
+   */
+  private addA_H() {
+    const a = this.registers.a;
+    const h = this.registers.h;
+    const result = (a + h) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", (a & 0xf) + (h & 0xf) > 0xf);
+    this.setFlag("C", a + h > 0xff);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * ADD A, L (0x85)
+   * Adds the value of register L to register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set if carry from bit 3.
+   * - C (Carry): Set if carry from bit 7.
+   *
+   * Clock cycles: 4
+   */
+  private addA_L() {
+    const a = this.registers.a;
+    const l = this.registers.l;
+    const result = (a + l) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", (a & 0xf) + (l & 0xf) > 0xf);
+    this.setFlag("C", a + l > 0xff);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * ADD A, (HL) (0x86)
+   * Adds the value at address (HL) to register A.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set if carry from bit 3.
+   * - C (Carry): Set if carry from bit 7.
+   *
+   * Clock cycles: 8
+   */
+  private addA_HL() {
+    const value = this.memory.readByte(this.registers.hl);
+    const a = this.registers.a;
+    const result = (a + value) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", (a & 0xf) + (value & 0xf) > 0xf);
+    this.setFlag("C", a + value > 0xff);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * ADD A, A (0x87)
+   * Adds the value of register A to itself.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set if carry from bit 3.
+   * - C (Carry): Set if carry from bit 7.
+   *
+   * Clock cycles: 4
+   */
+  private addA_A() {
+    const a = this.registers.a;
+    const result = (a + a) & 0xff;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", (a & 0xf) + (a & 0xf) > 0xf);
+    this.setFlag("C", a + a > 0xff);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * AND A, B (0xA0)
+   * Performs a bitwise AND operation between register A and register B.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private andA_B() {
+    const b = this.registers.b;
+    const result = this.registers.a & b;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", true);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * AND A, C (0xA1)
+   * Performs a bitwise AND operation between register A and register C.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private andA_C() {
+    const c = this.registers.c;
+    const result = this.registers.a & c;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", true);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * AND A, D (0xA2)
+   * Performs a bitwise AND operation between register A and register D.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private andA_D() {
+    const d = this.registers.d;
+    const result = this.registers.a & d;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", true);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * AND A, E (0xA3)
+   * Performs a bitwise AND operation between register A and register E.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private andA_E() {
+    const e = this.registers.e;
+    const result = this.registers.a & e;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", true);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * AND A, H (0xA4)
+   * Performs a bitwise AND operation between register A and register H.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private andA_H() {
+    const h = this.registers.h;
+    const result = this.registers.a & h;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", true);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * AND A, L (0xA5)
+   * Performs a bitwise AND operation between register A and register L.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private andA_L() {
+    const l = this.registers.l;
+    const result = this.registers.a & l;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", true);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * AND A, (HL) (0xA6)
+   * Performs a bitwise AND operation between register A and the value at address (HL).
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 8
+   */
+  private andA_HL() {
+    const value = this.memory.readByte(this.registers.hl);
+    const result = this.registers.a & value;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", true);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 2;
+    this.clocks.t = 8;
+  }
+
+  /**
+   * AND A, A (0xA7)
+   * Performs a bitwise AND operation between register A and itself (result is always A).
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Set.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private andA_A() {
+    const result = this.registers.a & this.registers.a;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", true);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * XOR A, B (0xA8)
+   * Performs a bitwise XOR operation between register A and register B.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Reset.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private xorA_B() {
+    const b = this.registers.b;
+    const result = this.registers.a ^ b;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", false);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * XOR A, C (0xA9)
+   * Performs a bitwise XOR operation between register A and register C.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Reset.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private xorA_C() {
+    const c = this.registers.c;
+    const result = this.registers.a ^ c;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", false);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * XOR A, D (0xAA)
+   * Performs a bitwise XOR operation between register A and register D.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Reset.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private xorA_D() {
+    const d = this.registers.d;
+    const result = this.registers.a ^ d;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", false);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * XOR A, E (0xAB)
+   * Performs a bitwise XOR operation between register A and register E.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Reset.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private xorA_E() {
+    const e = this.registers.e;
+    const result = this.registers.a ^ e;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", false);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * XOR A, H (0xAC)
+   * Performs a bitwise XOR operation between register A and register H.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Reset.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private xorA_H() {
+    const h = this.registers.h;
+    const result = this.registers.a ^ h;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", false);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * XOR A, L (0xAD)
+   * Performs a bitwise XOR operation between register A and register L.
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Reset.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private xorA_L() {
+    const l = this.registers.l;
+    const result = this.registers.a ^ l;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", false);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+  /**
+   * XOR A, (HL) (0xAE)
+   * Performs a bitwise XOR operation between register A and the value at address (HL).
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Reset.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 8
+   */
+  private xorA_HL() {
+    const value = this.memory.readByte(this.registers.hl);
+    const result = this.registers.a ^ value;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", false);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 2;
+    this.clocks.t = 8;
+  }
+
+  /**
+   * XOR A, A (0xAF)
+   * Performs a bitwise XOR operation between register A and itself (result is always A).
+   *
+   * Flags affected:
+   * - Z (Zero): Set if result is 0.
+   * - N (Subtract): Reset.
+   * - H (Half Carry): Reset.
+   * - C (Carry): Reset.
+   *
+   * Clock cycles: 4
+   */
+  private xorA_A() {
+    const result = this.registers.a ^ this.registers.a;
+    this.setFlag("Z", result === 0);
+    this.setFlag("N", false);
+    this.setFlag("H", false);
+    this.setFlag("C", false);
+    this.registers.a = result;
+    this.clocks.m = 1;
+    this.clocks.t = 4;
+  }
+
+
 
   /**
    * Add BC to HL
